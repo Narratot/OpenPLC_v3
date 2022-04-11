@@ -680,6 +680,295 @@ loading logs...
     </script>
 </html>"""
 
+monitoring_head = """
+/* OpenPLC Style */
+        .top {
+            position:absolute;
+            left:0; right:0; top:0;
+            height: 50px;
+            background-color: #1F1F1F;
+            position: fixed;
+            overflow: hidden;
+            z-index: 10
+        }
+        
+        .main {
+            position: absolute;
+            left:0px; top:50px; right:0; bottom:0;
+        }
+        
+        .user {
+            position:absolute;
+            left:75%; right:0; top:0;
+            height: 50px;
+            position: fixed;
+            overflow: hidden;
+            z-index: 11;
+            text-align:right;
+        }
+        
+        .button {
+            background-color: #E02222;
+            border: 1px solid #1F1F1F;
+            border-radius: 4px;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            font-family: "Roboto", sans-serif;
+        }
+        
+        .button:hover {
+            background-color: #B51A1A;
+        }
+        
+        table, h1, h2, h3, p {
+            font-family: "Roboto", sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        td, th {
+            border: 1px solid #cccccc;
+            text-align: left;
+            padding: 8px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #eeeeee;
+        }
+        
+        tr:hover {
+            cursor: hand;background-color: slategray;
+        }
+        
+        label {
+            font-family: arial, sans-serif;
+        }
+        
+        .form-inline 
+		{  
+			display: flex;
+			flex-flow: row wrap;
+			align-items: center;
+		}
+
+		.form-inline label 
+		{
+			margin: 5px 10px 5px 0;
+			width: 130px;
+		}
+
+		.form-inline input 
+		{
+			vertical-align: middle;
+			margin: 5px 10px 5px 0;
+			padding: 10px;
+			width: calc(100% - 250px);
+			background-color: #fff;
+			border: 1px solid #ddd;
+		}
+
+		.form-inline button 
+		{
+			padding: 10px 20px;
+			background-color: #E02222;
+			width: 100px;
+			border: 1px solid #1F1F1F;
+			color: white;
+			cursor: pointer;
+			font-size: 14px;
+            font-family: "Roboto", sans-serif;
+		}
+
+		.form-inline button:hover 
+		{
+			background-color: #B51A1A;
+		}
+
+		@media (max-width: 800px) 
+		{
+			.form-inline input 
+			{
+				margin: 10px 0;
+			}
+
+			.form-inline 
+			{
+				flex-direction: column;
+				align-items: stretch;
+			}
+		}
+        </style>
+        <body onload='loadData()'>"""
+
+        
+monitoring_tail = """
+                </div>
+            </div>
+        </div>
+    </body>
+    
+    <script>
+        var req;
+        var refresh_rate = 100;
+        
+        function loadData()
+        {
+            html_modbus_port = document.getElementById('modbus_port_cfg');
+            url = 'monitor-update?mb_port=' + html_modbus_port.value;
+            try
+            {
+                req = new XMLHttpRequest();
+            } catch (e) 
+            {
+                try
+                {
+                    req = new ActiveXObject('Msxml2.XMLHTTP');
+                } catch (e) 
+                {
+                    try 
+                    {
+                        req = new ActiveXObject('Microsoft.XMLHTTP');
+                    } catch (oc) 
+                    {
+                        alert('No AJAX Support');
+                        return;
+                    }
+                }
+            }
+            
+            req.onreadystatechange = processReqChange;
+            req.open('GET', url, true);
+            req.send(null);
+        }
+        
+        function updateRefreshRate()
+        {
+			html_refresh_text = document.getElementById('refresh_rate');
+            refresh_rate = parseInt(html_refresh_text.value);
+            if (refresh_rate < 100)
+            {
+                refresh_rate = 100
+            }
+			
+			html_refresh_text.value = refresh_rate;
+        }
+        
+        function processReqChange()
+        {
+            //If req shows 'complete'
+            if (req.readyState == 4)
+            {
+                mon_table = document.getElementById('monitor_table');
+                
+                //If 'OK'
+                if (req.status == 200)
+                {
+                    //Update table contents
+                    mon_table.innerHTML = req.responseText;
+                    
+                    //Start a new update timer
+                    timeoutID = setTimeout('loadData()', refresh_rate);
+                }
+            }
+        }
+    </script>
+</html>"""
+
+point_info_tail = """
+                        <br>
+                        <br>
+                        <br>
+                        <br>
+                        <center><input type="submit" value="Save Changes" class="button" style="width: 310px; height: 53px; margin: 0px 20px 0px 20px;"></center>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+    
+    <script type="text/javascript">
+        var req;
+        
+        window.onload = function()
+        {
+            setupSelector();
+            loadData();
+        }
+        
+        function setupSelector()
+        {
+            var checkbox_element = document.getElementById('force_checkbox');
+            var selector_element = document.getElementById('forced_value');
+            if (checkbox_element.checked == true)
+            {
+                selector_element.disabled = false;
+            }
+            else
+            {
+                selector_element.disabled = true;
+            }
+        }
+
+        document.getElementById('force_checkbox').onchange = function()
+        {
+            setupSelector();
+        }
+        
+        function loadData()
+        {
+            table_id = document.getElementById('point_id').value;
+            url = 'point-update?table_id=' + table_id;
+            try
+            {
+                req = new XMLHttpRequest();
+            } catch (e) 
+            {
+                try
+                {
+                    req = new ActiveXObject('Msxml2.XMLHTTP');
+                } catch (e) 
+                {
+                    try 
+                    {
+                        req = new ActiveXObject('Microsoft.XMLHTTP');
+                    } catch (oc) 
+                    {
+                        alert('No AJAX Support');
+                        return;
+                    }
+                }
+            }
+            
+            req.onreadystatechange = processReqChange;
+            req.open('GET', url, true);
+            req.send(null);
+        }
+        
+        function processReqChange()
+        {
+            //If req shows 'complete'
+            if (req.readyState == 4)
+            {
+                mon_point = document.getElementById('monitor_point');
+                
+                //If 'OK'
+                if (req.status == 200)
+                {
+                    //Update table contents
+                    mon_point.innerHTML = req.responseText;
+                    
+                    //Start a new update timer
+                    timeoutID = setTimeout('loadData()', 500);
+                }
+            }
+        }
+    </script>
+</html>"""
+
 add_user_tail = """
             </div>
             <div style="margin-left:320px; margin-right:70px">
@@ -862,7 +1151,6 @@ settings_head = """
                 <br>"""
                 
 settings_tail = """
-                        <input type='hidden' value='false' id='auto_run_text' name='auto_run_text'/>
                         <br>
                         <br>
                         <br>
@@ -885,6 +1173,10 @@ settings_tail = """
             var modbus_text = document.getElementById('modbus_server_port');
             var dnp3_checkbox = document.getElementById('dnp3_server');
             var dnp3_text = document.getElementById('dnp3_server_port');
+            var enip_checkbox = document.getElementById('enip_server');
+            var enip_text = document.getElementById('enip_server_port');
+            var pstorage_checkbox = document.getElementById('pstorage_thread');
+            var pstorage_text = document.getElementById('pstorage_thread_poll');
             var auto_run_checkbox = document.getElementById('auto_run');
             var auto_run_text = document.getElementById('auto_run_text');
             
@@ -904,6 +1196,24 @@ settings_tail = """
             else
             {
                 dnp3_text.disabled = true;
+            }
+            
+            if (enip_checkbox.checked == true)
+            {
+                enip_text.disabled = false;
+            }
+            else
+            {
+                enip_text.disabled = true;
+            }
+            
+            if (pstorage_checkbox.checked == true)
+            {
+                pstorage_text.disabled = false;
+            }
+            else
+            {
+                pstorage_text.disabled = true;
             }
             
             if (auto_run_checkbox.checked == true)
@@ -926,6 +1236,16 @@ settings_tail = """
             setupCheckboxes();
         }
         
+        document.getElementById('enip_server').onchange = function()
+        {
+            setupCheckboxes();
+        }
+        
+        document.getElementById('pstorage_thread').onchange = function()
+        {
+            setupCheckboxes();
+        }
+        
         document.getElementById('auto_run').onchange = function()
         {
             setupCheckboxes();
@@ -937,6 +1257,10 @@ settings_tail = """
             var modbus_port = document.forms["uploadForm"]["modbus_server_port"].value;
             var dnp3_checkbox = document.forms["uploadForm"]["dnp3_server"].checked;
             var dnp3_port = document.forms["uploadForm"]["dnp3_server_port"].value;
+            var enip_checkbox = document.forms["uploadForm"]["enip_server"].checked;
+            var enip_port = document.forms["uploadForm"]["enip_server_port"].value;
+            var pstorage_checkbox = document.forms["uploadForm"]["pstorage_thread"].checked;
+            var pstorage_poll = document.forms["uploadForm"]["pstorage_thread_poll"].value;
             
             if (modbus_checkbox && (Number(modbus_port) < 0 || Number(modbus_port) > 65535))
             {
@@ -946,6 +1270,16 @@ settings_tail = """
             if (dnp3_checkbox && (Number(dnp3_port) < 0 || Number(dnp3_port) > 65535))
             {
                 alert("Please select a port number between 0 and 65535");
+                return false;
+            }
+            if (enip_checkbox && (Number(enip_port) < 0 || Number(enip_port) > 65535))
+            {
+                alert("Please select a port number between 0 and 65535");
+                return false;
+            }
+            if (pstorage_checkbox && Number(pstorage_poll) < 0)
+            {
+                alert("Persistent Storage polling rate must be bigger than zero");
                 return false;
             }
             return true;
@@ -1045,9 +1379,10 @@ hardware_head = """
                 <br>"""
 
 hardware_tail = """</textarea>
+                        </div>
                         <br>
                         <br>
-                        <center><input type="submit" class="button" style="font-weight:bold; width: 310px; height: 53px; margin: 0px 20px 0px 20px;" value="Save changes"><a href="restore_custom_hardware" class="button" style="width: 310px; height: 53px; margin: 0px 20px 0px 20px;"><b>Restore Original Code</b></a></center>
+                        <center><input type="submit" class="button" style="font-weight:bold; width: 310px; height: 53px; margin: 0px 20px 0px 20px;" value="Save changes"><a href="restore_custom_hardware" id="code_restore" class="button" style="display:none; width: 310px; height: 53px; margin: 0px 20px 0px 20px;"><b>Restore Original Code</b></a></center>
                         <br>
                         <br>
                     </form>
@@ -1057,7 +1392,6 @@ hardware_tail = """</textarea>
     </body>
     
     <script type="text/javascript">
-    
     var myCodeMirror = CodeMirror.fromTextArea(custom_layer_code, 
     {
         lineNumbers: true,
@@ -1081,6 +1415,7 @@ hardware_tail = """</textarea>
     //Insert a dummy script to load something from the server periodically so that the user cookie won't expire
     function loadData()
     {
+        refreshSelector();
         url = 'runtime_logs'
         try
         {
@@ -1117,6 +1452,24 @@ hardware_tail = """</textarea>
         }
     }
     
+    function refreshSelector()
+    {
+        var drop_down = document.getElementById('hardware_layer');
+        var psm_div = document.getElementById('psm_code');
+        var restore_button = document.getElementById('code_restore');
+        if (drop_down.value == "psm_linux" || drop_down.value == "psm_win")
+        {
+            restore_button.style.display = "inline";
+            psm_div.style.visibility = "visible";
+        }
+        else
+        {
+            restore_button.style.display = "none";
+            psm_div.style.visibility = "hidden";
+        }
+        
+    }
+    
     </script>
 </html>"""
 
@@ -1134,9 +1487,11 @@ add_slave_devices_tail = """
                         <input type='text' id='dev_data' name='device_data' placeholder='8'>
                         <label for='dev_stop'><b>Stop Bits</b></label>
                         <input type='text' id='dev_stop' name='device_stop' placeholder='1'>
+                        <label for='dev_pause'><b>Transmission Pause</b></label>
+                        <input type='text' id='dev_pause' name='device_pause' placeholder='0'>
                         </div>
                     </div>
-                    <div style="float:right; width:45%; height:730px">
+                    <div style="float:right; width:45%; height:780px">
                         <p style='font-size:20px; margin-top:0px'><b>Discrete Inputs (%IX100.0)</b></p>
                         <label for='di_start'><b>Start Address:</b></label>
                         <input type='text' style='width: 20%' id='di_start' name='di_start' placeholder='0'>
@@ -1211,6 +1566,7 @@ add_devices_script = """
             var devparity = document.getElementById("dev_parity");
             var devdata = document.getElementById("dev_data");
             var devstop = document.getElementById("dev_stop");
+            var devpause = document.getElementById("dev_pause");
             
             var distart = document.getElementById("di_start");
             var disize = document.getElementById("di_size");
@@ -1313,6 +1669,8 @@ add_devices_script = """
                 devparity.value = "None"
                 turnElementOn(devdata)
                 turnElementOn(devstop)
+                turnElementOn(devpause)
+                devpause.value = "0"
                 turnElementOn(distart)
                 turnElementOn(disize)
                 turnElementOn(dostart)
@@ -1339,6 +1697,8 @@ add_devices_script = """
                 devdata.value = "8"
                 turnElementOff(devstop)
                 devstop.value = "1"
+                turnElementOff(devpause)
+                devpause.value = "0"
                 turnElementOff(distart)
                 distart.value = "0"
                 turnElementOff(disize)
@@ -1375,6 +1735,8 @@ add_devices_script = """
                 devdata.value = "8"
                 turnElementOff(devstop)
                 devstop.value = "1"
+                turnElementOff(devpause)
+                devpause.value = "0"
                 turnElementOff(distart)
                 distart.value = "0"
                 turnElementOff(disize)
@@ -1415,6 +1777,7 @@ add_devices_script = """
             var devbaud = document.forms["uploadForm"]["dev_baud"].value;
             var devdata = document.forms["uploadForm"]["dev_data"].value;
             var devstop = document.forms["uploadForm"]["dev_stop"].value;
+            var devpause = document.forms["uploadForm"]["dev_pause"].value;
             
             var distart = document.forms["uploadForm"]["di_start"].value;
             var disize = document.forms["uploadForm"]["di_size"].value;
@@ -1473,9 +1836,11 @@ edit_slave_devices_tail = """
                         <input type='text' id='dev_data' name='device_data' placeholder='8'>
                         <label for='dev_stop'><b>Stop Bits</b></label>
                         <input type='text' id='dev_stop' name='device_stop' placeholder='1'>
+                        <label for='dev_pause'><b>Transmission Pause</b></label>
+                        <input type='text' id='dev_pause' name='device_pause' placeholder='0'>
                         </div>
                     </div>
-                    <div style="float:right; width:45%; height:730px">
+                    <div style="float:right; width:45%; height:780px">
                         <p style='font-size:20px; margin-top:0px'><b>Discrete Inputs (%IX100.0)</b></p>
                         <label for='di_start'><b>Start Address:</b></label>
                         <input type='text' style='width: 20%' id='di_start' name='di_start' placeholder='0'>
@@ -1545,6 +1910,7 @@ edit_devices_script = """
             var devparity = document.getElementById("dev_parity");
             var devdata = document.getElementById("dev_data");
             var devstop = document.getElementById("dev_stop");
+            var devpause = document.getElementById("dev_pause");
             
             var distart = document.getElementById("di_start");
             var disize = document.getElementById("di_size");
@@ -1647,6 +2013,8 @@ edit_devices_script = """
                 devparity.value = "None"
                 turnElementOn(devdata)
                 turnElementOn(devstop)
+                turnElementOn(devpause)
+                devpause.value = "0"
                 turnElementOn(distart)
                 turnElementOn(disize)
                 turnElementOn(dostart)
@@ -1673,6 +2041,8 @@ edit_devices_script = """
                 devdata.value = "8"
                 turnElementOff(devstop)
                 devstop.value = "1"
+                turnElementOff(devpause)
+                devpause.value = "0"
                 turnElementOff(distart)
                 distart.value = "0"
                 turnElementOff(disize)
@@ -1709,6 +2079,8 @@ edit_devices_script = """
                 devdata.value = "8"
                 turnElementOff(devstop)
                 devstop.value = "1"
+                turnElementOff(devpause)
+                devpause.value = "0"
                 turnElementOff(distart)
                 distart.value = "0"
                 turnElementOff(disize)
@@ -1749,6 +2121,7 @@ edit_devices_script = """
             var devbaud = document.forms["uploadForm"]["dev_baud"].value;
             var devdata = document.forms["uploadForm"]["dev_data"].value;
             var devstop = document.forms["uploadForm"]["dev_stop"].value;
+            var devpause = document.forms["uploadForm"]["dev_pause"].value;
             
             var distart = document.forms["uploadForm"]["di_start"].value;
             var disize = document.forms["uploadForm"]["di_size"].value;
@@ -1800,6 +2173,7 @@ edit_devices_script = """
             var devparity = document.getElementById("dev_parity");
             var devdata = document.getElementById("dev_data");
             var devstop = document.getElementById("dev_stop");
+            var devpause = document.getElementById("dev_pause");
             
             var distart = document.getElementById("di_start");
             var disize = document.getElementById("di_size");
